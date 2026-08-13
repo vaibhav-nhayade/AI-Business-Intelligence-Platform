@@ -40,7 +40,7 @@
 
 }
 
-.hero::before{
+/* .hero::before{
 
     content:"";
 
@@ -60,7 +60,7 @@
         radial-gradient(
             rgba(37,99,235,.15),
             transparent 70%
-        );
+        ); */
 
 }
 
