@@ -1,6 +1,5 @@
 
-
-/* .fade-in{
+ .fade-in{
     animation:fadeIn .6s ease forwards;
 }
 
@@ -10,7 +9,7 @@
 
 .slide-down{
     animation:slideDown .6s ease forwards;
-} */
+} 
 
 .zoom-in{
     animation:zoomIn .4s ease forwards;
