@@ -1,11 +1,11 @@
 
- /* .fade-in{
+ .fade-in{
     animation:fadeIn .6s ease forwards;
 }
 
 .slide-up{
     animation:slideUp .6s ease forwards;
-} */
+}
 
 .slide-down{
     animation:slideDown .6s ease forwards;
