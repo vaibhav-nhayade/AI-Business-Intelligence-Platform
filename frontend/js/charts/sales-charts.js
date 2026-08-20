@@ -1,6 +1,16 @@
 /**
  * AI Business Intelligence Platform
- * Sales Charts
+ * Sales Analytics Charts
+ *
+ * Responsibility:
+ * - Create Sales Analytics charts
+ * - Handle Sales-specific Chart.js configuration
+ * - Accept externally supplied data
+ *
+ * This file does NOT:
+ * - Fetch data
+ * - Store business data
+ * - Manipulate dashboard DOM
  */
 
 import {
@@ -9,16 +19,23 @@ import {
 
 import {
     CHART_COLORS,
-    LINE_CHART_OPTIONS,
     BAR_CHART_OPTIONS,
     HORIZONTAL_BAR_CHART_OPTIONS
 } from '../config/chart-config.js';
 
 
+/* =========================================================
+   HOURLY SALES PATTERN
+========================================================= */
+
 /**
- * Sales trend.
+ * Create Hourly Sales Pattern chart.
+ *
+ * @param {string|HTMLCanvasElement} canvas
+ * @param {Object} data
+ * @returns {Chart|null}
  */
-export function createSalesTrendChart(
+export function createHourlySalesChart(
     canvas,
     data
 ) {
@@ -27,54 +44,7 @@ export function createSalesTrendChart(
     }
 
     return chartManager.create(
-        'salesTrend',
-        canvas,
-        {
-            type: 'line',
-
-            data: {
-                labels: data.labels || [],
-
-                datasets: [
-                    {
-                        label: 'Sales',
-
-                        data: data.values || [],
-
-                        borderColor:
-                            CHART_COLORS.AMBER,
-
-                        backgroundColor:
-                            'transparent',
-
-                        tension: 0.35,
-
-                        borderWidth: 2,
-
-                        pointRadius: 2
-                    }
-                ]
-            },
-
-            options: LINE_CHART_OPTIONS
-        }
-    );
-}
-
-
-/**
- * Sales by region.
- */
-export function createSalesRegionChart(
-    canvas,
-    data
-) {
-    if (!data) {
-        return null;
-    }
-
-    return chartManager.create(
-        'salesRegion',
+        'salesHourly',
         canvas,
         {
             type: 'bar',
@@ -85,63 +55,104 @@ export function createSalesRegionChart(
                 datasets: [
                     {
                         label: 'Sales',
+
+                        data: data.values || [],
+
+                        backgroundColor:
+                            CHART_COLORS.AMBER,
+
+                        borderRadius: 6,
+
+                        borderSkipped: false,
+
+                        maxBarThickness: 34,
+
+                        hoverBackgroundColor:
+                            CHART_COLORS.AMBER
+                    }
+                ]
+            },
+
+            options: {
+                ...BAR_CHART_OPTIONS,
+
+                scales: {
+                    ...BAR_CHART_OPTIONS.scales,
+
+                    y: {
+                        ...BAR_CHART_OPTIONS.scales.y,
+
+                        beginAtZero: true
+                    }
+                }
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   SALES CONVERSION FUNNEL
+========================================================= */
+
+/**
+ * Create Sales Conversion Funnel chart.
+ *
+ * @param {string|HTMLCanvasElement} canvas
+ * @param {Object} data
+ * @returns {Chart|null}
+ */
+export function createSalesFunnelChart(
+    canvas,
+    data
+) {
+    if (!data) {
+        return null;
+    }
+
+    return chartManager.create(
+        'salesFunnel',
+        canvas,
+        {
+            type: 'bar',
+
+            data: {
+                labels: data.labels || [],
+
+                datasets: [
+                    {
+                        label: 'Opportunities',
 
                         data: data.values || [],
 
                         backgroundColor:
                             CHART_COLORS.TEAL,
 
-                        borderRadius: 5,
+                        borderRadius: 6,
 
-                        borderSkipped: false
+                        borderSkipped: false,
+
+                        maxBarThickness: 38,
+
+                        hoverBackgroundColor:
+                            CHART_COLORS.TEAL
                     }
                 ]
             },
 
-            options: BAR_CHART_OPTIONS
-        }
-    );
-}
+            options: {
+                ...HORIZONTAL_BAR_CHART_OPTIONS,
 
+                scales: {
+                    ...HORIZONTAL_BAR_CHART_OPTIONS.scales,
 
-/**
- * Top products by sales.
- */
-export function createTopProductsChart(
-    canvas,
-    data
-) {
-    if (!data) {
-        return null;
-    }
+                    x: {
+                        ...HORIZONTAL_BAR_CHART_OPTIONS.scales.x,
 
-    return chartManager.create(
-        'topProducts',
-        canvas,
-        {
-            type: 'bar',
-
-            data: {
-                labels: data.labels || [],
-
-                datasets: [
-                    {
-                        label: 'Sales',
-
-                        data: data.values || [],
-
-                        backgroundColor:
-                            CHART_COLORS.AMBER,
-
-                        borderRadius: 5,
-
-                        borderSkipped: false
+                        beginAtZero: true
                     }
-                ]
-            },
-
-            options:
-                HORIZONTAL_BAR_CHART_OPTIONS
+                }
+            }
         }
     );
 }
