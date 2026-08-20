@@ -1,6 +1,16 @@
 /**
  * AI Business Intelligence Platform
- * Marketing Charts
+ * Marketing Analytics Charts
+ *
+ * Responsibility:
+ * - Create Marketing Analytics charts
+ * - Handle Marketing-specific Chart.js configuration
+ * - Accept externally supplied data
+ *
+ * This file does NOT:
+ * - Fetch data
+ * - Store business data
+ * - Manipulate unrelated dashboard UI
  */
 
 import {
@@ -10,14 +20,29 @@ import {
 import {
     CHART_COLORS,
     BAR_CHART_OPTIONS,
-    LINE_CHART_OPTIONS
+    DOUGHNUT_CHART_OPTIONS
 } from '../config/chart-config.js';
 
 
+/* =========================================================
+   TRAFFIC SOURCES
+========================================================= */
+
 /**
- * Marketing channel performance.
+ * Create Traffic Sources chart.
+ *
+ * Expected data:
+ *
+ * {
+ *     labels: [],
+ *     values: []
+ * }
+ *
+ * @param {string|HTMLCanvasElement} canvas
+ * @param {Object} data
+ * @returns {Chart|null}
  */
-export function createMarketingChannelChart(
+export function createTrafficSourcesChart(
     canvas,
     data
 ) {
@@ -26,7 +51,73 @@ export function createMarketingChannelChart(
     }
 
     return chartManager.create(
-        'marketingChannels',
+        'marketingTrafficSources',
+        canvas,
+        {
+            type: 'doughnut',
+
+            data: {
+                labels: data.labels || [],
+
+                datasets: [
+                    {
+                        data: data.values || [],
+
+                        backgroundColor:
+                            data.colors || [
+                                CHART_COLORS.AMBER,
+                                CHART_COLORS.TEAL,
+                                CHART_COLORS.BLUE,
+                                CHART_COLORS.ORANGE,
+                                CHART_COLORS.DARK
+                            ],
+
+                        borderColor:
+                            CHART_COLORS.BACKGROUND,
+
+                        borderWidth: 3,
+
+                        hoverOffset: 6,
+
+                        borderRadius: 4
+                    }
+                ]
+            },
+
+            options: DOUGHNUT_CHART_OPTIONS
+        }
+    );
+}
+
+
+/* =========================================================
+   CAMPAIGN PERFORMANCE
+========================================================= */
+
+/**
+ * Create Campaign Performance chart.
+ *
+ * Expected data:
+ *
+ * {
+ *     labels: [],
+ *     values: []
+ * }
+ *
+ * @param {string|HTMLCanvasElement} canvas
+ * @param {Object} data
+ * @returns {Chart|null}
+ */
+export function createCampaignPerformanceChart(
+    canvas,
+    data
+) {
+    if (!data) {
+        return null;
+    }
+
+    return chartManager.create(
+        'marketingCampaignPerformance',
         canvas,
         {
             type: 'bar',
@@ -36,68 +127,42 @@ export function createMarketingChannelChart(
 
                 datasets: [
                     {
-                        label: 'Conversions',
+                        label:
+                            data.label ||
+                            'Conversions',
 
                         data: data.values || [],
 
                         backgroundColor:
                             CHART_COLORS.TEAL,
 
-                        borderRadius: 5,
+                        borderRadius: 6,
 
-                        borderSkipped: false
+                        borderSkipped: false,
+
+                        maxBarThickness: 42,
+
+                        hoverBackgroundColor:
+                            CHART_COLORS.TEAL
                     }
                 ]
             },
 
-            options: BAR_CHART_OPTIONS
-        }
-    );
-}
+            options: {
+                ...BAR_CHART_OPTIONS,
 
+                indexAxis: 'y',
 
-/**
- * Marketing ROI trend.
- */
-export function createMarketingROIChart(
-    canvas,
-    data
-) {
-    if (!data) {
-        return null;
-    }
+                scales: {
+                    ...BAR_CHART_OPTIONS.scales,
 
-    return chartManager.create(
-        'marketingROI',
-        canvas,
-        {
-            type: 'line',
+                    x: {
+                        ...BAR_CHART_OPTIONS.scales.x,
 
-            data: {
-                labels: data.labels || [],
-
-                datasets: [
-                    {
-                        label: 'ROI',
-
-                        data: data.values || [],
-
-                        borderColor:
-                            CHART_COLORS.AMBER,
-
-                        backgroundColor:
-                            'transparent',
-
-                        tension: 0.35,
-
-                        borderWidth: 2,
-
-                        pointRadius: 2
+                        beginAtZero: true
                     }
-                ]
-            },
-
-            options: LINE_CHART_OPTIONS
+                }
+            }
         }
     );
 }
