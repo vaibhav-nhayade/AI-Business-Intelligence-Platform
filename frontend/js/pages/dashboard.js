@@ -3,19 +3,22 @@
  * Dashboard Page Controller
  *
  * Responsibility:
- * - Initialize the Dashboard page
- * - Control page navigation
- * - Manage active navigation state
- * - Update page title and subtitle
- * - Coordinate dashboard modules
- * - Handle mobile sidebar state
+ * - Control dashboard page navigation
+ * - Manage active page state
+ * - Update dashboard header
+ * - Coordinate the Sidebar component
+ * - Maintain URL hash navigation
  *
  * This file does NOT:
+ * - Manage sidebar DOM behavior
  * - Contain business data
  * - Define charts
  * - Implement ML
  * - Fetch backend data
  * - Contain module-specific business logic
+ *
+ * Sidebar behavior belongs to:
+ *     ../components/sidebar.js
  */
 
 
@@ -24,6 +27,10 @@ import {
     selectAll,
     setText
 } from '../core/dom.js';
+
+import {
+    Sidebar
+} from '../components/sidebar.js';
 
 
 /* =========================================================
@@ -183,39 +190,51 @@ const PAGE_CONFIG = {
 ========================================================= */
 
 export class Dashboard {
+
+    /**
+     * @param {Object} options
+     */
     constructor(options = {}) {
-        this.shell =
-            options.shell ||
-            getById('dashboardShell') ||
-            document.querySelector('.shell');
-
-        this.navigation =
-            options.navigation ||
-            getById('navScroll');
-
-        this.sidebar =
-            options.sidebar ||
-            document.querySelector('.sidebar');
 
         this.pageTitle =
             options.pageTitle ||
-            getById('pageTitle');
+            getById(
+                options.pageTitleId ||
+                'pageTitle'
+            );
+
 
         this.pageSub =
             options.pageSub ||
-            getById('pageSub');
+            getById(
+                options.pageSubId ||
+                'pageSub'
+            );
 
-        this.hamburgerButton =
-            options.hamburgerButton ||
-            getById('hamburgerBtn');
+
+        /*
+         * Use an injected Sidebar instance when
+         * provided by app.js.
+         *
+         * Otherwise create one here.
+         */
+        this.sidebar =
+            options.sidebar ||
+            null;
+
 
         this.currentPage =
             options.initialPage ||
             this.getInitialPage();
 
-        this.isSidebarOpen = false;
+
+        this.initialized = false;
     }
 
+
+    /* =====================================================
+       INITIALIZATION
+    ===================================================== */
 
     /**
      * Initialize Dashboard.
@@ -223,11 +242,10 @@ export class Dashboard {
      * @returns {Dashboard}
      */
     init() {
-        this.bindNavigation();
 
-        this.bindMobileNavigation();
+        this.initializeSidebar();
 
-        this.bindKeyboardNavigation();
+        this.bindHashNavigation();
 
         this.navigate(
             this.currentPage,
@@ -236,7 +254,56 @@ export class Dashboard {
             }
         );
 
+
+        this.initialized = true;
+
         return this;
+    }
+
+
+    /**
+     * Initialize Sidebar integration.
+     */
+    initializeSidebar() {
+
+        /*
+         * If app.js supplied the Sidebar instance,
+         * configure its navigation callback.
+         */
+        if (this.sidebar) {
+
+            this.sidebar.onNavigate =
+                page => {
+                    this.navigate(
+                        page
+                    );
+                };
+
+
+            /*
+             * Ensure current page is reflected
+             * in sidebar state.
+             */
+            this.sidebar.setActive(
+                this.currentPage
+            );
+
+            return;
+        }
+
+
+        /*
+         * Fallback for direct Dashboard usage.
+         */
+        this.sidebar =
+            new Sidebar({
+                onNavigate:
+                    page => {
+                        this.navigate(
+                            page
+                        );
+                    }
+            }).init();
     }
 
 
@@ -245,7 +312,7 @@ export class Dashboard {
     ===================================================== */
 
     /**
-     * Determine the initial page.
+     * Determine initial dashboard page.
      *
      * Priority:
      *
@@ -256,9 +323,13 @@ export class Dashboard {
      * @returns {string}
      */
     getInitialPage() {
+
         const hash =
             window.location.hash
-                .replace('#', '')
+                .replace(
+                    '#',
+                    ''
+                )
                 .trim();
 
 
@@ -271,12 +342,17 @@ export class Dashboard {
 
 
         const activeItem =
-            this.navigation?.querySelector(
-                '.nav-item.active'
+            document.querySelector(
+                '.nav-item.active[data-page]'
             );
 
 
-        if (activeItem?.dataset.page) {
+        if (
+            activeItem &&
+            PAGE_CONFIG[
+                activeItem.dataset.page
+            ]
+        ) {
             return activeItem.dataset.page;
         }
 
@@ -290,45 +366,6 @@ export class Dashboard {
     ===================================================== */
 
     /**
-     * Bind sidebar navigation.
-     */
-    bindNavigation() {
-        if (!this.navigation) {
-            return;
-        }
-
-
-        const navigationItems =
-            this.navigation.querySelectorAll(
-                '.nav-item[data-page]'
-            );
-
-
-        navigationItems.forEach(
-            item => {
-                item.addEventListener(
-                    'click',
-                    () => {
-                        const page =
-                            item.dataset.page;
-
-
-                        if (!page) {
-                            return;
-                        }
-
-
-                        this.navigate(
-                            page
-                        );
-                    }
-                );
-            }
-        );
-    }
-
-
-    /**
      * Navigate to a dashboard page.
      *
      * @param {string} page
@@ -338,6 +375,7 @@ export class Dashboard {
         page,
         options = {}
     ) {
+
         if (
             !page ||
             !PAGE_CONFIG[page]
@@ -352,6 +390,10 @@ export class Dashboard {
             );
 
 
+        /*
+         * Do not update the header or URL for
+         * a page that does not actually exist.
+         */
         if (!pageElement) {
             return;
         }
@@ -363,13 +405,16 @@ export class Dashboard {
             pageElement
         );
 
-        this.updateActiveNavigation(
-            page
-        );
-
         this.updateHeader(
             page
         );
+
+
+        if (this.sidebar) {
+            this.sidebar.setActive(
+                page
+            );
+        }
 
 
         this.currentPage =
@@ -384,9 +429,6 @@ export class Dashboard {
                 page
             );
         }
-
-
-        this.closeSidebar();
     }
 
 
@@ -394,6 +436,7 @@ export class Dashboard {
      * Hide all dashboard pages.
      */
     hideAllPages() {
+
         const pages =
             selectAll(
                 '.page'
@@ -402,9 +445,11 @@ export class Dashboard {
 
         pages.forEach(
             page => {
+
                 page.classList.remove(
                     'active'
                 );
+
 
                 page.setAttribute(
                     'aria-hidden',
@@ -420,59 +465,18 @@ export class Dashboard {
      *
      * @param {HTMLElement} pageElement
      */
-    showPage(pageElement) {
+    showPage(
+        pageElement
+    ) {
+
         pageElement.classList.add(
             'active'
         );
 
+
         pageElement.setAttribute(
             'aria-hidden',
             'false'
-        );
-    }
-
-
-    /**
-     * Update active sidebar navigation item.
-     *
-     * @param {string} page
-     */
-    updateActiveNavigation(page) {
-        if (!this.navigation) {
-            return;
-        }
-
-
-        const items =
-            this.navigation.querySelectorAll(
-                '.nav-item[data-page]'
-            );
-
-
-        items.forEach(
-            item => {
-                const isActive =
-                    item.dataset.page ===
-                    page;
-
-
-                item.classList.toggle(
-                    'active',
-                    isActive
-                );
-
-
-                if (isActive) {
-                    item.setAttribute(
-                        'aria-current',
-                        'page'
-                    );
-                } else {
-                    item.removeAttribute(
-                        'aria-current'
-                    );
-                }
-            }
         );
     }
 
@@ -486,7 +490,10 @@ export class Dashboard {
      *
      * @param {string} page
      */
-    updateHeader(page) {
+    updateHeader(
+        page
+    ) {
+
         const config =
             PAGE_CONFIG[page];
 
@@ -518,14 +525,21 @@ export class Dashboard {
     ===================================================== */
 
     /**
-     * Update URL hash without reloading.
+     * Update URL hash.
      *
      * @param {string} page
      */
-    updateURL(page) {
+    updateURL(
+        page
+    ) {
+
+        const nextHash =
+            `#${page}`;
+
+
         if (
             window.location.hash ===
-            `#${page}`
+            nextHash
         ) {
             return;
         }
@@ -534,170 +548,46 @@ export class Dashboard {
         window.history.replaceState(
             null,
             '',
-            `#${page}`
+            nextHash
         );
     }
 
 
     /**
-     * Handle browser back/forward navigation.
+     * Handle browser hash changes.
      */
     handleHashChange() {
+
         const page =
             window.location.hash
-                .replace('#', '')
+                .replace(
+                    '#',
+                    ''
+                )
                 .trim();
 
 
         if (
-            page &&
-            PAGE_CONFIG[page]
+            !page ||
+            !PAGE_CONFIG[page]
         ) {
-            this.navigate(
-                page,
-                {
-                    updateHistory: false
-                }
-            );
-        }
-    }
-
-
-    /* =====================================================
-       MOBILE NAVIGATION
-    ===================================================== */
-
-    /**
-     * Bind hamburger/sidebar controls.
-     */
-    bindMobileNavigation() {
-        if (!this.hamburgerButton) {
             return;
         }
 
 
-        this.hamburgerButton.addEventListener(
-            'click',
-            () => {
-                this.toggleSidebar();
-            }
-        );
-
-
-        document.addEventListener(
-            'click',
-            event => {
-                if (
-                    !this.isSidebarOpen ||
-                    !this.sidebar
-                ) {
-                    return;
-                }
-
-
-                const clickedInsideSidebar =
-                    this.sidebar.contains(
-                        event.target
-                    );
-
-
-                const clickedHamburger =
-                    this.hamburgerButton.contains(
-                        event.target
-                    );
-
-
-                if (
-                    !clickedInsideSidebar &&
-                    !clickedHamburger
-                ) {
-                    this.closeSidebar();
-                }
+        this.navigate(
+            page,
+            {
+                updateHistory: false
             }
         );
     }
 
 
     /**
-     * Toggle sidebar.
+     * Bind browser history navigation.
      */
-    toggleSidebar() {
-        if (this.isSidebarOpen) {
-            this.closeSidebar();
-        } else {
-            this.openSidebar();
-        }
-    }
-
-
-    /**
-     * Open sidebar.
-     */
-    openSidebar() {
-        if (!this.sidebar) {
-            return;
-        }
-
-
-        this.sidebar.classList.add(
-            'open'
-        );
-
-
-        this.isSidebarOpen = true;
-
-
-        this.hamburgerButton?.setAttribute(
-            'aria-expanded',
-            'true'
-        );
-    }
-
-
-    /**
-     * Close sidebar.
-     */
-    closeSidebar() {
-        if (!this.sidebar) {
-            return;
-        }
-
-
-        this.sidebar.classList.remove(
-            'open'
-        );
-
-
-        this.isSidebarOpen = false;
-
-
-        this.hamburgerButton?.setAttribute(
-            'aria-expanded',
-            'false'
-        );
-    }
-
-
-    /* =====================================================
-       KEYBOARD
-    ===================================================== */
-
-    /**
-     * Bind keyboard shortcuts.
-     */
-    bindKeyboardNavigation() {
-        document.addEventListener(
-            'keydown',
-            event => {
-                if (
-                    event.key ===
-                    'Escape'
-                ) {
-                    this.closeSidebar();
-                }
-            }
-        );
-
+    bindHashNavigation() {
 
         window.addEventListener(
             'hashchange',
@@ -728,7 +618,9 @@ export class Dashboard {
      * @param {string} page
      * @returns {Object|null}
      */
-    getPageConfig(page) {
+    getPageConfig(
+        page
+    ) {
         return (
             PAGE_CONFIG[page] ||
             null
@@ -737,7 +629,7 @@ export class Dashboard {
 
 
     /**
-     * Get all registered pages.
+     * Get registered page keys.
      *
      * @returns {string[]}
      */
@@ -745,6 +637,36 @@ export class Dashboard {
         return Object.keys(
             PAGE_CONFIG
         );
+    }
+
+
+    /**
+     * Check whether Dashboard
+     * has been initialized.
+     *
+     * @returns {boolean}
+     */
+    isInitialized() {
+        return this.initialized;
+    }
+
+
+    /**
+     * Destroy Dashboard listeners.
+     *
+     * Note:
+     * Sidebar lifecycle is owned by app.js
+     * when Sidebar is injected.
+     */
+    destroy() {
+
+        window.removeEventListener(
+            'hashchange',
+            this.handleHashChange
+        );
+
+
+        this.initialized = false;
     }
 }
 
