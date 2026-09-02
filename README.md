@@ -1,11 +1,11 @@
-<div dir="rtl" align="right">
+<div dir="ltr" align="left">
 
 # ⚡ AI Business Intelligence Platform 
 ### Enterprise-Grade Predictive Telemetry & Decision Intelligence Engine
 
 > Transforming raw organizational data into continuous, automated strategic outcomes.
 
-<p align="right">
+<p align="left">
   <img src="https://img.shields.io/badge/Status-Frontend%20Development-00F2FE?style=for-the-badge&logoColor=black" alt="Status" />
   <img src="https://img.shields.io/badge/Core-HTML5%20Semantic-FF4500?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5" />
   <img src="https://img.shields.io/badge/Design_System-Modern_CSS3-007ACC?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3" />
@@ -17,7 +17,7 @@
 
 ## 🧭 Systems Index
 
-<div align="right">
+<div align="left">
 
 - [Platform Overview](#-platform-overview)
 - [Strategic Vision](#-strategic-vision)
@@ -203,7 +203,7 @@ ecommerce-business-analytics-dashboard/
 
 ## 💻 Foundational Tech Stack
 
-<div align="right">
+<div align="left">
 
 | Architectural Layer | Implementation | Version / Standard |
 | :--- | :--- | :--- |
@@ -233,7 +233,7 @@ ecommerce-business-analytics-dashboard/
 
 ## 🚀 Execution Roadmap
 
-<div align="right">
+<div align="left">
 
 ### 💻 Client Engineering
 - [x] Landing experience completed
@@ -265,7 +265,7 @@ ecommerce-business-analytics-dashboard/
 
 ## ⚡ SLA & Performance Benchmarks
 
-<div align="right">
+<div align="left">
 
 | Target Vector | Target Metric | Pipeline Status |
 | :--- | :--- | :--- |
@@ -325,7 +325,7 @@ Distributed under the terms of the **MIT Open Source License**.
 
 ---
 
-<p align="right">
+<p align="left">
   <b>Enterprise Analytics Dashboard</b> • Engineered for scale and decision intelligence.
 </p>
 
