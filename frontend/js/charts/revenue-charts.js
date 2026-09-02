@@ -1,6 +1,6 @@
 /**
  * AI Business Intelligence Platform
- * Revenue Charts
+ * Revenue Intelligence Charts
  *
  * Responsibility:
  * - Create Revenue Intelligence charts
@@ -10,7 +10,15 @@
  * This file does NOT:
  * - Fetch data
  * - Store business data
+ * - Contain business datasets
  * - Manipulate unrelated dashboard UI
+ *
+ * Data contract:
+ * {
+ *     labels: [],
+ *     values: [],
+ *     colors: []
+ * }
  */
 
 import {
@@ -28,6 +36,41 @@ import {
 
 
 /* =========================================================
+   SHARED CONFIGURATION
+========================================================= */
+
+/**
+ * Default colors for Revenue doughnut charts.
+ *
+ * Data supplied by the caller can override these using
+ * data.colors.
+ */
+const REVENUE_DONUT_COLORS = [
+    CHART_COLORS.AMBER,
+    CHART_COLORS.TEAL,
+    CHART_COLORS.BLUE,
+    CHART_COLORS.ORANGE,
+    CHART_COLORS.DARK
+];
+
+
+/**
+ * Default colors for Revenue Waterfall.
+ *
+ * Data supplied by the caller can override these using
+ * data.colors.
+ */
+const REVENUE_WATERFALL_COLORS = [
+    CHART_COLORS.MUTED,
+    CHART_COLORS.TEAL,
+    CHART_COLORS.TEAL,
+    CHART_COLORS.RED,
+    CHART_COLORS.RED,
+    CHART_COLORS.AMBER
+];
+
+
+/* =========================================================
    REVENUE BY CATEGORY
 ========================================================= */
 
@@ -42,9 +85,10 @@ export function createRevenueCategoryChart(
     canvas,
     data
 ) {
-    if (!data) {
+    if (!canvas || !data) {
         return null;
     }
+
 
     return chartManager.create(
         'revenueByCategory',
@@ -60,13 +104,8 @@ export function createRevenueCategoryChart(
                         data: data.values || [],
 
                         backgroundColor:
-                            data.colors || [
-                                CHART_COLORS.AMBER,
-                                CHART_COLORS.TEAL,
-                                CHART_COLORS.BLUE,
-                                CHART_COLORS.ORANGE,
-                                CHART_COLORS.DARK
-                            ],
+                            data.colors ||
+                            REVENUE_DONUT_COLORS,
 
                         borderColor:
                             CHART_COLORS.BACKGROUND,
@@ -80,7 +119,8 @@ export function createRevenueCategoryChart(
                 ]
             },
 
-            options: DOUGHNUT_CHART_OPTIONS
+            options:
+                DOUGHNUT_CHART_OPTIONS
         }
     );
 }
@@ -101,9 +141,10 @@ export function createRevenuePaymentChart(
     canvas,
     data
 ) {
-    if (!data) {
+    if (!canvas || !data) {
         return null;
     }
+
 
     return chartManager.create(
         'revenueByPayment',
@@ -119,13 +160,8 @@ export function createRevenuePaymentChart(
                         data: data.values || [],
 
                         backgroundColor:
-                            data.colors || [
-                                CHART_COLORS.AMBER,
-                                CHART_COLORS.TEAL,
-                                CHART_COLORS.BLUE,
-                                CHART_COLORS.ORANGE,
-                                CHART_COLORS.DARK
-                            ],
+                            data.colors ||
+                            REVENUE_DONUT_COLORS,
 
                         borderColor:
                             CHART_COLORS.BACKGROUND,
@@ -139,7 +175,8 @@ export function createRevenuePaymentChart(
                 ]
             },
 
-            options: DOUGHNUT_CHART_OPTIONS
+            options:
+                DOUGHNUT_CHART_OPTIONS
         }
     );
 }
@@ -160,9 +197,10 @@ export function createMonthlyRevenueChart(
     canvas,
     data
 ) {
-    if (!data) {
+    if (!canvas || !data) {
         return null;
     }
+
 
     return chartManager.create(
         'revenueMonthly',
@@ -175,15 +213,18 @@ export function createMonthlyRevenueChart(
 
                 datasets: [
                     {
-                        label: 'Revenue',
+                        label:
+                            data.label ||
+                            'Revenue',
 
                         data: data.values || [],
 
-                        backgroundColor: context =>
-                            createBarGradient(
-                                context,
-                                CHART_COLORS.AMBER
-                            ),
+                        backgroundColor:
+                            context =>
+                                createBarGradient(
+                                    context,
+                                    CHART_COLORS.AMBER
+                                ),
 
                         borderRadius: 6,
 
@@ -208,7 +249,10 @@ export function createMonthlyRevenueChart(
 
                         title: {
                             display: true,
-                            text: 'Revenue'
+
+                            text:
+                                data.yAxisLabel ||
+                                'Revenue'
                         }
                     }
                 }
@@ -225,17 +269,16 @@ export function createMonthlyRevenueChart(
 /**
  * Create Revenue Waterfall chart.
  *
- * The data format expected:
+ * Expected data:
  *
  * {
- *     labels: ['Start', 'New', 'Upsell', ...],
- *     ranges: [
- *         [0, 3.6],
- *         [3.6, 3.9],
- *         ...
- *     ],
- *     colors: [...]
+ *     labels: [],
+ *     ranges: [],
+ *     colors: []
  * }
+ *
+ * `ranges` should contain the start/end values
+ * required by the Chart.js floating-bar format.
  *
  * @param {string|HTMLCanvasElement} canvas
  * @param {Object} data
@@ -245,9 +288,10 @@ export function createRevenueWaterfallChart(
     canvas,
     data
 ) {
-    if (!data) {
+    if (!canvas || !data) {
         return null;
     }
+
 
     return chartManager.create(
         'revenueWaterfall',
@@ -260,19 +304,15 @@ export function createRevenueWaterfallChart(
 
                 datasets: [
                     {
-                        label: 'Revenue',
+                        label:
+                            data.label ||
+                            'Revenue',
 
                         data: data.ranges || [],
 
                         backgroundColor:
-                            data.colors || [
-                                CHART_COLORS.MUTED,
-                                CHART_COLORS.TEAL,
-                                CHART_COLORS.TEAL,
-                                CHART_COLORS.RED,
-                                CHART_COLORS.RED,
-                                CHART_COLORS.AMBER
-                            ],
+                            data.colors ||
+                            REVENUE_WATERFALL_COLORS,
 
                         borderRadius: 4,
 
@@ -296,7 +336,10 @@ export function createRevenueWaterfallChart(
 
                         title: {
                             display: true,
-                            text: '₹ Cr'
+
+                            text:
+                                data.yAxisLabel ||
+                                '₹ Cr'
                         }
                     }
                 }
@@ -313,7 +356,8 @@ export function createRevenueWaterfallChart(
 /**
  * Create Revenue Trend chart.
  *
- * Kept available for future Executive/Revenue views.
+ * This chart remains available for Executive Summary
+ * or future Revenue Intelligence views.
  *
  * @param {string|HTMLCanvasElement} canvas
  * @param {Object} data
@@ -323,9 +367,10 @@ export function createRevenueTrendChart(
     canvas,
     data
 ) {
-    if (!data) {
+    if (!canvas || !data) {
         return null;
     }
+
 
     return chartManager.create(
         'revenueTrend',
@@ -338,18 +383,21 @@ export function createRevenueTrendChart(
 
                 datasets: [
                     {
-                        label: 'Revenue',
+                        label:
+                            data.label ||
+                            'Revenue',
 
                         data: data.values || [],
 
                         borderColor:
                             CHART_COLORS.AMBER,
 
-                        backgroundColor: context =>
-                            createFadeGradient(
-                                context,
-                                CHART_COLORS.AMBER
-                            ),
+                        backgroundColor:
+                            context =>
+                                createFadeGradient(
+                                    context,
+                                    CHART_COLORS.AMBER
+                                ),
 
                         fill: true,
 
@@ -372,7 +420,8 @@ export function createRevenueTrendChart(
                 ]
             },
 
-            options: LINE_CHART_OPTIONS
+            options:
+                LINE_CHART_OPTIONS
         }
     );
 }

@@ -201,6 +201,7 @@ export class DateFilter {
     /**
      * Destroy component.
      */
+
     destroy() {
         this.cleanupFunctions.forEach(
             cleanup => cleanup?.()
